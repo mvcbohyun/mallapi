@@ -25,6 +25,8 @@ public interface ContentsRepository {
 
 	int update(Contents contents);
 
-	List<CategoryReturnBean> category();
+	List<CategoryReturnBean> categoryl();
+
+	List<CategoryReturnBean> categorym();
 
 }
