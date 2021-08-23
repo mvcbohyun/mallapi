@@ -104,10 +104,15 @@ public class RestContentsController {
 		
 		return  new BaseResponse<>("성공");
 	}
-	@GetMapping("/category")
-	public BaseResponse<?> category() {
+	@GetMapping("/categoryl")
+	public BaseResponse<?> categoryl() {
 		
-		return  new BaseResponse<List<CategoryReturnBean>>(contentsRepository.category());
+		return  new BaseResponse<List<CategoryReturnBean>>(contentsRepository.categoryl());
+	}
+	@GetMapping("/categorym")
+	public BaseResponse<?> categorym() {
+		
+		return  new BaseResponse<List<CategoryReturnBean>>(contentsRepository.categorym());
 	}
 	
 
