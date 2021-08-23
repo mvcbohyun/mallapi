@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+					    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kinsight.repository.BoardRepository">
+
+ 
+ 
+ 
+ <select id="search" parameterType="com.kinsight.domain.PageRequestParameter"  resultType="com.kinsight.bean.BoardReturnBean">
+ 	SELECT IFNULL(a.id,0) as id  ,
+ 		   CASE WHEN a.secret = 1 THEN '비밀글입니다.' ELSE  a.title END as title , 
+ 		   IFNULL(b.nickname,'') as nickname, 
+ 		   IFNULL(a.indate,'') as indate,
+ 		   IFNULL(a.inid,0) as inid
+	FROM board a
+	JOIN user b 
+	ON a.inid = b.id
+	<where>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(parameter.keyword)">
+		   concat( a.title, a.content , b.nickname) LIKE  CONCAT('%',#{parameter.keyword},'%')
+		</if>
+	</where>
+	AND a.categoryid = (CASE WHEN  #{parameter.categoryid}  = 0 THEN a.categoryid ELSE #{parameter.categoryid} END) 
+	ORDER BY a.id desc 
+	LIMIT #{pageRequest.limit},  #{pageRequest.offset}
+	
+	
+ </select> 
+ 
+ <insert id="save" parameterType="com.kinsight.domain.Board"  useGeneratedKeys="true" keyProperty="id">
+ 
+ 
+	INSERT INTO board
+	(
+		
+		title,
+		content,
+		enabled,
+		indate,
+		inid,
+		upddate,
+		updid,
+		categoryid,
+		secret
+	)
+	VALUES
+	(
+		
+		#{title},
+		#{content},
+		#{enabled},
+		#{indate},
+		#{inid},
+		#{upddate},
+		#{updid},
+		#{categoryid},
+		#{secret}
+	)
+	
+
+ </insert>
+ 
+  <select id="detail" parameterType="long"  resultType="com.kinsight.bean.BoardDetailReturnBean">
+ 	SELECT IFNULL(a.id,0) as id ,
+ 		   CASE WHEN a.secret = 1 AND a.inid !=#{saveid}  
+ 		   		THEN (case when EXISTS (SELECT * FROM user WHERE id =#{saveid} AND role ='ROLE_ADMIN') then a.title ELSE'비밀글입니다.' END )
+				ELSE a.title END as title,
+ 		   CASE WHEN a.secret = 1 AND a.inid !=#{saveid}  
+ 		   	     THEN (case when EXISTS (SELECT * FROM user WHERE id =#{saveid} AND role ='ROLE_ADMIN') then a.content ELSE'비밀글입니다.' END )
+				 ELSE a.content END  as content,  
+ 		   IFNULL(a.indate,'') as indate,
+ 		   IFNULL(b.nickname,'') as nickname
+	FROM board a
+	JOIN user b 
+	ON a.inid = b.id
+	WHERE a.id = #{id}
+ </select> 
+ 
+ 
+ <delete id="delete" parameterType="long">
+ 	delete
+	FROM board 
+	WHERE id = #{id}
+	AND (inid = #{saveid} OR EXISTS (SELECT * FROM user WHERE id =#{saveid} AND role ='ROLE_ADMIN'));
+ </delete> 
+  <update id="update" parameterType="com.kinsight.domain.Board" >
+
+		update board
+		set title   = #{title},
+			content = #{content},
+			upddate = #{upddate},
+			updid   = #{updid},
+			categoryid = #{categoryid},
+			secret  = #{secret}
+		where id = #{id}
+		AND (inid = #{updid} OR EXISTS (SELECT * FROM user WHERE id =#{updid} AND role ='ROLE_ADMIN'));
+		
+
+ </update>
+ 
+ <select id="category"  resultType="com.kinsight.bean.CategoryReturnBean">
+ 	SELECT IFNULL(id,0) as id  ,IFNULL(title,'') as title
+	FROM category
+	where type in('board','all')
+ </select> 
+ <select id="allcount"  resultType="Integer">
+ 	SELECT COUNT(*)
+	FROM board
+ </select> 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+	
+
+</mapper>

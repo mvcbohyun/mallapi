@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+					    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kinsight.repository.LikesRepository">
+
+ 
+ <select id="likechk" parameterType="com.kinsight.param.LikesParam"  resultType="com.kinsight.domain.Likes">
+ 	SELECT *
+	FROM likes 
+	WHERE typeid = #{typeid}
+	AND userid = #{userid}
+	and tabletype= #{tabletype}
+ </select> 
+ 
+ <insert id="like" parameterType="com.kinsight.domain.Likes" >
+ 
+ 
+	INSERT INTO likes
+	(
+		typeid,
+		userid,
+		tabletype,
+		indate
+	)
+	VALUES
+	(
+		
+		#{typeid},
+		#{userid},
+		#{tabletype},
+		#{indate}
+	)
+	
+
+ </insert>
+ 
+ 
+ <delete id="unlike" parameterType="com.kinsight.param.LikesParam">
+ 	delete
+	FROM likes 
+	WHERE typeid = #{typeid}
+	AND userid = #{userid}
+	and tabletype= #{tabletype}
+ </delete> 
+	
+
+</mapper>

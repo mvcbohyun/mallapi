@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+					    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kinsight.repository.FileRepository">
+
+
+ 
+ <insert id="filesave" parameterType="com.kinsight.domain.File" >
+	INSERT INTO file
+	(
+		
+		typeid,
+		uploadfile,
+		path,
+		fullpath,
+		filekey,
+		seq,
+		filetype,
+		tabletype
+	)
+	VALUES
+	(
+		#{typeid},
+		#{uploadfile},
+		#{path},
+		#{fullpath},
+		#{filekey},
+		#{seq},
+		#{filetype},
+		#{tabletype}
+	)
+
+ </insert>
+  <select id="detail" parameterType="long"  resultType="com.kinsight.bean.FileReturnBean">
+ 	SELECT id,fullpath
+	FROM file
+	WHERE typeid = #{id}
+	ORDER BY seq
+ </select> 
+ 
+ 
+ <delete id="delete" parameterType="com.kinsight.param.FileParam">
+ 	DELETE
+	FROM file  
+	WHERE typeid = #{typeid}
+	AND tabletype =#{tabletype}
+ </delete> 
+ 
+ 
+  <select id="findkey" parameterType="com.kinsight.param.FileParam" resultType="String">
+ 	SELECT filekey 
+	FROM file  
+	WHERE typeid = #{typeid}
+	AND tabletype =#{tabletype}
+ </select> 
+ 
+ 
+ 
+ 
+	
+
+</mapper>

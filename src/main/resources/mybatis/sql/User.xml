@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+					    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kinsight.repository.UserRepository">
+
+ <insert id="insert" parameterType="com.kinsight.domain.User" >
+	INSERT INTO user
+	(
+		nickname,
+		email,
+		password,
+		enabled,
+		joindate,
+		mailkey,
+		mailyn,
+		newpwkey,
+		newpwyn,
+		mailpwtime,
+		role
+	)
+	VALUES
+	(
+		#{nickname},
+		#{email},
+		#{password},
+		#{enabled},
+		#{joindate},
+		#{mailkey},
+		#{mailyn},
+		#{newpwkey},
+		#{newpwyn},
+		#{mailpwtime},
+		#{role}
+	)
+
+ </insert>
+ 
+ 
+ <select id="login" parameterType="com.kinsight.param.UserLoginParam" resultType="com.kinsight.domain.User">
+ 	SELECT ifnull(id,0) as id ,
+ 		   ifnull(nickname,'') as nickname,
+		   ifnull(email,'') as email,
+		   ifnull(password,'') as password,
+		   ifnull(mailyn,'') as mailyn,
+		   ifnull(role,'ROLE_USER') as role
+ 	FROM user
+ 	WHERE enabled = '1'
+ 	AND email = #{email} 
+ </select> 
+ 
+ 
+ <select id="findusernickname" parameterType="Long" resultType="String">
+ 	SELECT nickname
+ 	FROM user
+ 	WHERE enabled = '1'
+ 	AND id = #{userid}
+ </select> 
+ 
+ <select id="findemail" parameterType="String" resultType="com.kinsight.domain.User">
+ 	SELECT email,mailyn
+ 	FROM user
+ 	WHERE enabled = '1'
+ 	AND email = #{email}
+ </select>
+ 
+  <select id="finduser" parameterType="String" resultType="com.kinsight.domain.User">
+ 	SELECT *
+ 	FROM user
+ 	WHERE enabled = 1
+ 	AND mailyn = 1
+ 	AND email = #{email}
+ </select>
+ 
+ <select id="findemailkey" parameterType="String" resultType="String">
+ 	SELECT mailkey
+ 	FROM user
+ 	WHERE enabled = '1'
+ 	AND email = #{email}
+ </select>
+ 
+ <update id="mailchk" parameterType="String" >
+
+		update user
+		set mailyn = 1
+		where mailkey = #{mailkey}
+
+ </update>
+ <update id="sendpwmail" parameterType="String" >
+
+		update user
+		set newpwkey =  #{newpwkey}
+		where email = #{email}
+
+ </update>
+ 
+ <update id="newpwchk" parameterType="String" >
+
+		update user
+		set newpwyn = 1
+		where newpwkey = #{newpwkey}
+
+ </update>
+
+ <delete id="userDelete" parameterType="String">
+ 		delete 
+		from user
+		where email= #{email}
+ </delete>
+ 
+  <update id="newpwchange" parameterType="String" >
+
+		update user
+		set password = #{password}
+		where email= #{email}
+		and newpwyn = 1
+
+ </update>
+ 
+ <update id="newpwcolumnchange" parameterType="String" >
+
+		update user
+		set newpwyn = 0 , newpwkey =  ''
+		where email= #{email}
+		and newpwyn = 1
+
+ </update>
+ <select id="mailpwtime" parameterType="String" resultType="String">
+ 	SELECT mailpwtime
+ 	FROM user
+ 	WHERE enabled = '1'
+ 	AND email = #{email}
+ </select>
+ 
+ 
+  <update id="updatemailpwtime" parameterType="String" >
+
+		update user
+		set mailpwtime = SYSDATE()
+		where email= #{email}
+
+ </update>
+ 
+  <update id="nicknamechange" parameterType="String">
+	update user
+	set nickname = #{nickname}
+	where email= #{email}
+	and enabled = 1
+
+ </update>
+ 
+  <update id="userphonenumberupdate" parameterType="com.kinsight.bean.UserPhonenumberUpdateBean">
+	update user
+	set phonenumber = #{phonenumber},
+		phonekey = #{phonekey},
+		phoneyn = #{phoneyn}
+	where id= #{userid}
+	and enabled = 1
+  </update>
+ 	
+ 	
+ 	<update id="smschk" parameterType="com.kinsight.bean.UserPhonenumberUpdateBean">
+	update user
+	set phoneyn = #{phoneyn},
+	    phonekey= '1'
+	where id= #{userid}
+	and phonekey = #{phonekey}
+ 	</update>
+ 	
+    <select id="smsaddresschk" parameterType="Long" resultType="com.kinsight.bean.UserSMSAdressReturn">
+ 	SELECT ifnull(username,'') AS username,
+		 CASE WHEN phonekey='1' AND phoneyn='1' THEN  phonenumber ELSE '' END AS phonenumber ,
+		 ifnull(homeaddress1,'') AS homeaddress1,
+		 ifnull(homeaddress2,'') AS homeaddress2,
+		 ifnull(homezipcode,'') AS homezipcode,
+		 ifnull(comaddress1,'') AS comaddress1,
+		 ifnull(comaddress2,'') AS comaddress2,
+		 ifnull(comzipcode,'') AS comzipcode,
+		 ifnull(primaryaddress,'h')	AS  primaryaddress		 
+ 	FROM user
+ 	WHERE enabled = '1'
+ 	AND id =#{userid};
+    </select>
+ 
+ 
+ 	<update id="addresssave" parameterType="com.kinsight.param.AddressSaveParam">
+	update user
+	set homeaddress1 = CASE WHEN #{gubun}='h' THEN #{address1} ELSE homeaddress1 END ,
+	    homeaddress2 = CASE WHEN #{gubun}='h' THEN #{address2} ELSE homeaddress2 END ,
+	    homezipcode  = CASE WHEN #{gubun}='h' THEN #{zipcode} ELSE homezipcode END ,
+	    comaddress1  = CASE WHEN #{gubun}='c' THEN #{address1} ELSE comaddress1 END ,
+	    comaddress2  = CASE WHEN #{gubun}='c' THEN #{address2} ELSE comaddress2 END ,
+	    comzipcode   = CASE WHEN #{gubun}='c' THEN #{zipcode} ELSE comzipcode END 
+	where id= #{userid}
+ 	</update>
+ 	
+ 	<update id="primaryaddresssave"  parameterType="hashMap">
+	update user
+	set primaryaddress = #{gubun}
+	where id= #{userid}
+ 	</update>
+ 
+ 
+
+
+
+
+
+	
+
+</mapper>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+					    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kinsight.repository.ContentsRepository">
+
+ 
+ <select id="search" parameterType="com.kinsight.domain.PageRequestParameter"  resultType="com.kinsight.bean.ContentsReturnBean">
+ 	SELECT IFNULL(c.id,0) as id,
+ 		   IFNULL(c.title,'') as title,
+ 		   IFNULL(c.price,0) as price,
+ 		   IFNULL(f.fullpath,'') as fullpath,
+ 		   COUNT(l.id) as likecount,
+ 		   if(l.userid=#{parameter.userid} ,1,-1)  as likestate
+	FROM contents c
+	LEFT JOIN file f
+	ON c.id = f.typeid
+	AND f.tabletype='contents'
+	LEFT JOIN likes l
+	ON c.id = l.typeid
+	AND l.tabletype='contents'
+	<where>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(parameter.keyword)">
+		   concat( c.title, c.content ) LIKE  CONCAT('%',#{parameter.keyword},'%')
+		</if>
+	
+		<if test=" parameter.lowprice != null and !parameter.lowprice.equals('') ">
+		 <![CDATA[
+		AND price >= #{parameter.lowprice} 
+		]]>
+		</if>
+		
+		<if test=" parameter.highprice != null and !parameter.highprice.equals('')">
+		 <![CDATA[
+		AND price <= #{parameter.highprice}
+		]]>
+		</if>
+		AND c.categorylid = (CASE WHEN  #{parameter.categorylid}  = 0 THEN c.categorylid ELSE #{parameter.categorylid} END) 
+		<if test=" parameter.highprice != null and !parameter.highprice.equals('')">
+		 <![CDATA[
+		AND c.categorymid =  #{parameter.categorymid}  
+		]]>
+		</if>
+	</where>
+	GROUP BY c.id
+	ORDER BY 
+	<choose>
+		<when test="parameter.searchType == 'pp'"></when>
+		<when test="parameter.searchType == 'nw'">id desc</when>
+		<when test="parameter.searchType == 'lp'">price asc,id desc</when>
+		<when test="parameter.searchType == 'hp'">price desc,id desc</when>
+		<when test="parameter.searchType == 'lk'">likecount desc,id desc</when>
+		<otherwise>id desc</otherwise>
+	</choose>
+	LIMIT #{pageRequest.limit},  #{pageRequest.offset}
+	
+	
+ </select> 
+ <insert id="save" parameterType="com.kinsight.domain.Contents"  useGeneratedKeys="true" keyProperty="id">
+ 
+ 
+	INSERT INTO contents
+	(
+		
+		title,
+		content,
+		price,
+		categorylid,
+		categorymid,
+		coninout,
+		indate,
+		inid,
+		upddate,
+		updid
+	)
+	VALUES
+	(
+		
+		#{title},
+		#{content},
+		#{price},
+		#{categorylid},
+		#{categorymid},
+		#{coninout},
+		#{indate},
+		#{inid},
+		#{upddate},
+		#{updid}
+	)
+	
+
+ </insert>
+ 
+ <update id="update" parameterType="com.kinsight.domain.Contents" >
+
+		update contents
+		set title   = #{title},
+			content = #{content},
+			price   = #{price},
+			categorylid=#{categorylid},
+			categorymid=#{categorymid},
+			coninout=#{coninout},
+			upddate = #{upddate},
+			updid   = #{updid}
+		where id = #{id}
+		AND Exists(SELECT * FROM user WHERE id =#{updid} AND role ='ROLE_ADMIN') ;
+		
+
+ </update>
+ 
+ <select id="detail" parameterType="long"  resultType="com.kinsight.bean.ContentsDetailReturnBean">
+ 	SELECT  IFNULL(c.id,0) as id,
+ 			IFNULL(c.title,'') as title,
+ 			IFNULL(c.content,'') as content,
+ 			IFNULL(c.price,0) as price,
+ 			IFNULL(c.categorylid,0) as categorylid,
+ 			IFNULL(c.categorymid,0) as categorymid,
+ 			IFNULL(c.coninout,0) as coninout,
+ 			IFNULL(f.fullpath,'') as fullpath
+	FROM contents c
+	LEFT JOIN file f
+	ON c.id = f.typeid
+	AND f.tabletype='contents'
+	WHERE c.id = #{id}
+	
+ </select> 
+ 
+ <delete id="delete" parameterType="long">
+ 	delete
+	FROM contents 
+	WHERE id =#{id}
+	AND Exists(SELECT * FROM user WHERE id =#{saveid} AND role ='ROLE_ADMIN') ;
+ </delete>
+ 
+  <select id="categoryl"  resultType="com.kinsight.bean.CategoryReturnBean">
+ 	SELECT IFNULL(id,0)   as id,
+ 		   IFNULL(title,'') as title
+	FROM categoryl
+	where type in('contents','all')
+ </select> 
+ <select id="categorym"  resultType="com.kinsight.bean.CategoryReturnBean">
+ 	SELECT IFNULL(id,0)   as id,
+ 		   IFNULL(title,'') as title
+	FROM categorym
+	where type in('contents','all')
+ </select> 
+ 
+ 	
+
+</mapper>

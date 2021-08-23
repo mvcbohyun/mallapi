@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+					    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kinsight.repository.CommentsRepository">
+
+ 
+ 
+ 
+ <select id="search" parameterType="com.kinsight.domain.PageRequestParameter"  resultType="com.kinsight.bean.CommentsReturnBean">
+ 	SELECT IFNULL(a.id,0) as id,
+		 IFNULL(a.content,'') as content,
+		 IFNULL(a.replyid,0) as replyid,
+		 IFNULL(a.seq,0) as seq,
+		 IFNULL(a.inid,0) as inid,
+		 IFNULL(b.nickname,'') as nickname,
+		 IFNULL(a.depth,0) as depth
+	FROM comments a
+	JOIN user b
+	ON a.inid = b.id
+	WHERE a.boardid =#{parameter.boardid}
+	ORDER BY replyid desc, seq
+ </select> 
+ 
+ <insert id="save" parameterType="com.kinsight.domain.Comments"  >
+ 
+  <selectKey resultType="long" keyProperty="id" order="BEFORE">
+         SELECT ifnull(MAX(id),0)+1 FROM comments
+    </selectKey>
+	INSERT INTO comments
+	(
+		id,
+		boardid,
+		content,
+		indate,
+		inid,
+		upddate,
+		updid,
+		replyid,
+		seq,
+		depth
+	)
+	VALUES
+	(
+		
+		#{id},
+		#{boardid},
+		#{content},
+		#{indate},
+		#{updid},
+		#{upddate},
+		#{updid},
+		#{id},
+		1,
+		1
+	)
+	
+
+ </insert>
+ 
+  <update id="update" parameterType="com.kinsight.domain.Comments" >
+
+		update comments
+		set content = #{content},
+			upddate = #{upddate},
+			updid   = #{updid}
+		where id = #{id}
+		AND (inid = #{inid} OR EXISTS (SELECT * FROM user WHERE id =#{inid} AND role ='ROLE_ADMIN'));
+
+ </update>
+ 
+  <update id="sequpdate" parameterType="long" >
+		UPDATE comments  SET seq =seq+1
+		WHERE seq>(SELECT seq  FROM comments WHERE id = #{commentid} )
+		AND replyid =(SELECT replyid  FROM comments WHERE id = #{commentid} )
+ </update>
+ 
+ 
+  <insert id="commentsave" parameterType="com.kinsight.param.CommentsSaveParam"  >
+ 
+  <selectKey resultType="long" keyProperty="id" order="BEFORE">
+         SELECT ifnull(MAX(id),0)+1 FROM comments
+    </selectKey>
+	INSERT INTO comments
+	(
+		id,
+		boardid,
+		content,
+		indate,
+		inid,
+		upddate,
+		updid,
+		replyid,
+		seq,
+		depth
+	)
+	SELECT 
+			#{id},
+			boardid,
+			#{content},
+			#{indate},
+			#{saveid},
+			#{upddate},
+			#{saveid},
+			replyid,
+			seq+1,
+			depth+1
+	FROM comments
+	where id = #{commentid}
+ </insert>
+  <delete id="delete" parameterType="long">
+ 	delete
+	FROM comments 
+	WHERE replyid IN (SELECT replyid FROM comments WHERE id=#{id} AND depth=1 )  OR id =#{id}
+	AND (inid = #{saveid} OR EXISTS (SELECT * FROM user WHERE id =#{saveid} AND role ='ROLE_ADMIN'));
+ </delete> 
+ 
+ 
+  <delete id="boardiddelete" parameterType="long">
+ 	delete
+	FROM comments 
+	WHERE boardid =#{id}
+ </delete> 
+
+</mapper>
